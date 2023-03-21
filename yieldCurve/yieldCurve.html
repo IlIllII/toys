@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>US Treasury Yield Curve</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div style="width: 75%; margin: auto;">
+        <canvas id="yieldCurveChart"></canvas>
+    </div>
+    <script>
+        const fetchData = async () => {
+            const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+            const targetUrl = 'https://fred.stlouisfed.org/graph/fredgraph.csv?id=GS1M,GS3M,GS6M,GS1,GS2,GS3,GS5,GS7,GS10,GS20,GS30';
+            const url = proxyUrl + targetUrl;
+
+            const response = await fetch(url);
+            if (response.ok) {
+                const csvData = await response.text();
+                const rows = csvData.split('\n').slice(1);
+                const latestRow = rows[rows.length - 2];
+                const values = latestRow.split(',').slice(1);
+                return values.map((value, index) => ({ x: index, y: parseFloat(value) }));
+            } else {
+                throw new Error('Failed to fetch data');
+            }
+        };
+
+        const createChart = (data) => {
+            const ctx = document.getElementById('yieldCurveChart').getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['1 Month', '3 Month', '6 Month', '1 Year', '2 Year', '3 Year', '5 Year', '7 Year', '10 Year', '20 Year', '30 Year'],
+                    datasets: [{
+                        label: 'US Treasury Yield Curve',
+                        data: data,
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        };
+
+        (async () => {
+            try {
+                const data = await fetchData();
+                createChart(data);
+            } catch (error) {
+                console.error(error);
+            }
+        })();
+    </script>
+</body>
+</html>
