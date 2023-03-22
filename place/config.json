@@ -1,0 +1,10 @@
+{
+    "image_name": "image_file_name_here",
+    "client_id": "client_id_here",
+    "secret": "secret_here",
+    "start_x": "start_x_here",
+    "start_y": "start_y_here",
+    "canvas": "canvas_id_here",
+    "username": "username_here",
+    "password": "password_here"
+}
