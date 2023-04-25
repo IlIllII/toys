@@ -3,13 +3,14 @@ import random
 
 PREFIX_LENGTH = 2
 NUM_WORDS = 100
+FILENAME = "text.txt"
 
 
-def make_starting_prefix_array(n: int = PREFIX_LENGTH):
+def make_starting_prefix_array(n: int = PREFIX_LENGTH) -> list:
     return ["\n"] * n
 
 
-def make_key(*args):
+def make_key(*args) -> str:
     return "".join(args)
 
 
@@ -27,9 +28,9 @@ def construct_prefix_map(filename: str) -> dict:
     return prefix_map
 
 
-def generate_text(n: int, prefix_map: dict):
+def generate_text(n: int, prefix_map: dict) -> None:
     prefixes = make_starting_prefix_array()
-    for i in range(n):
+    for _ in range(n):
         suffixes = prefix_map[make_key(*prefixes)]
         word = random.choice(suffixes)
         print(word, end=" ")
@@ -40,5 +41,5 @@ def generate_text(n: int, prefix_map: dict):
 
 
 if __name__ == "__main__":
-    prefix_map = construct_prefix_map("text.txt")
+    prefix_map = construct_prefix_map(FILENAME)
     generate_text(NUM_WORDS, prefix_map)
