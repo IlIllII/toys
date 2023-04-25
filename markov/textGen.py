@@ -1,17 +1,16 @@
 import random
 
-N = 2
+
+PREFIX_LENGTH = 2
+NUM_WORDS = 100
 
 
-def make_starting_prefix_array(n: int = N):
-    return ["\n"] * N
+def make_starting_prefix_array(n: int = PREFIX_LENGTH):
+    return ["\n"] * n
 
 
 def make_key(*args):
-    key = ""
-    for arg in args:
-        key += str(arg)
-    return key
+    return "".join(args)
 
 
 def construct_prefix_map(filename: str) -> dict:
@@ -42,4 +41,4 @@ def generate_text(n: int, prefix_map: dict):
 
 if __name__ == "__main__":
     prefix_map = construct_prefix_map("text.txt")
-    generate_text(100, prefix_map)
+    generate_text(NUM_WORDS, prefix_map)
