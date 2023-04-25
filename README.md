@@ -1,2 +1,3 @@
 # scripts
-A collection of scripts
+
+A collection of codes too small for their own repository.
