@@ -26,13 +26,17 @@ int main(int argc, const char *argv[]) {
 
     start = time(NULL);
 
-    // #pragma loop(hint_parallel(0))
     #pragma loop(ivdep)
-    for (int i = 0; i < n; i++) {
-        for (int k = 0; k < n; k++) {
-            // #pragma loop(no_vector)
-            for (int j = 0; j < n; j++) {
-                C[i][j] += A[i][k] * B[k][j];
+    for (int ii = 0; ii < n; ii += OUTER_BLOCK) {
+        for (int kk = 0; kk < n; kk += OUTER_BLOCK) {
+            for (int jj = 0; jj < n; jj += OUTER_BLOCK) {
+                for (int i = ii; i < ii + OUTER_BLOCK; i++) {
+                    for (int k = kk; k < kk + OUTER_BLOCK; k++) {
+                        for (int j = jj; j < jj + OUTER_BLOCK; j++) {
+                            C[i][j] += A[i][k] * B[k][j];
+                        }
+                    }
+                }
             }
         }
     }
