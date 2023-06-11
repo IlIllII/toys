@@ -6,6 +6,15 @@ SCREEN_HEIGHT = 600
 NUM_POINTS = 10
 
 
+def random_points(num_points):
+    points = []
+    for _ in range(num_points):
+        points.append(
+            (random.randint(0, SCREEN_WIDTH), random.randint(0, SCREEN_HEIGHT))
+        )
+    return points
+
+
 def run():
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -18,11 +27,12 @@ def run():
                 running = False
 
         screen.fill((255, 255, 255))
-        for p in range(NUM_POINTS):
-            pygame.draw.circle(screen, (0, 0, 0), (random.randint(0, SCREEN_WIDTH), random.randint(0, SCREEN_HEIGHT)), 5)
+        for p in random_points(NUM_POINTS):
+            pygame.draw.circle(screen, (0, 0, 0), p, 5)
         pygame.display.flip()
 
     pygame.quit()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     run()
