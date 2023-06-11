@@ -19,6 +19,7 @@ def run():
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("Voronoi Diagram")
+    points = random_points(NUM_POINTS)
 
     running = True
     while running:
@@ -27,8 +28,9 @@ def run():
                 running = False
 
         screen.fill((255, 255, 255))
-        for p in random_points(NUM_POINTS):
+        for p in points:
             pygame.draw.circle(screen, (0, 0, 0), p, 5)
+        pygame.draw.circle(screen, (0, 0, 0), pygame.mouse.get_pos(), 5)
         pygame.display.flip()
 
     pygame.quit()
