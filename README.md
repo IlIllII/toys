@@ -1,3 +1,3 @@
-# scripts
+# toys
 
-A collection of codes too small for their own repository.
+A collection of toy programs to play with.
