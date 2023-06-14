@@ -1,4 +1,5 @@
 class Event:
+    """An event in the sweep line algorithm."""
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -10,14 +11,17 @@ class Event:
 
 
 class SiteEvent(Event):
+    """A site event is just a point, I think."""
     def __init__(self, x, y):
         super().__init__(x, y)
+        self.site = (x, y)
 
     def __repr__(self):
         return f"SiteEvent({self.x}, {self.y})"
 
 
 class CircleEvent(Event):
+    """A circle event is a circle that crosses the sweep line."""
     def __init__(self, x, y, radius, arc_node, points, arcs):
         super().__init__(x, y)
         self.radius = radius
