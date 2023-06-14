@@ -1,6 +1,5 @@
 import pygame
 import random
-from data_structures import *
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
@@ -23,10 +22,6 @@ def random_colors(num_colors):
             (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
         )
     return colors
-
-
-def fortune_voronoi(points):
-    pass
 
 
 def naive_voronoi(points, screen):
