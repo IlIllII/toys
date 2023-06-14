@@ -10,11 +10,11 @@ class Event:
 
 
 class SiteEvent(Event):
-    def __init__(self, x, y, p):
-        super().__init__(x, y, p)
+    def __init__(self, x, y):
+        super().__init__(x, y)
 
     def __repr__(self):
-        return f"SiteEvent({self.x}, {self.y}, {self.p})"
+        return f"SiteEvent({self.x}, {self.y})"
 
 
 class CircleEvent(Event):
@@ -34,14 +34,6 @@ class CircleEvent(Event):
             self.points[1].position(),
             self.points[2].position(),
         )
-
-
-class SiteEvent(Event):
-    def __init__(self, x, y):
-        super().__init__(x, y)
-
-    def __repr__(self):
-        return f"SiteEvent({self.x}, {self.y})"
 
 
 def create_circle_event(left, middle, right, sweep_line):
