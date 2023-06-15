@@ -30,14 +30,17 @@ class CircleEvent(Event):
         self.arcs = arcs
 
     def __repr__(self):
-        return f"CircleEvent({self.x}, {self.y}, {self.p}, {self.ycenter})"
+        return f"CircleEvent({self.x}, {self.y}, {self.radius}, {self.arc_node})"
 
     def get_triangle(self):
         return (
-            self.points[0].position(),
-            self.points[1].position(),
-            self.points[2].position(),
+            self.points[0],
+            self.points[1],
+            self.points[2],
         )
+    
+    def get_tangent_point(self):
+        return (self.x, self.y + self.radius)
 
 
 def create_circle_event(left, middle, right, sweep_line):

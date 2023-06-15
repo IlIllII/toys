@@ -1,72 +1,22 @@
 from queue import PriorityQueue
 from events import SiteEvent, CircleEvent
 
+import pygame
 
-points = [(1, 0), (1, 1), (2, 0.5), (3, 3), (2, 2.5), (3, 2), (4, 1), (5, 0)]
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 800
+
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Voronoi Diagram")
+
+points = [(300, 300), (600, 600), (600, 200), (120, 100)]
 
 sweep_line = 0
 
+cells = dict()
 event_queue = PriorityQueue()
 for p in points:
     event_queue.put((p[1], SiteEvent(p[0], p[1])))
-
-# while event_queue.qsize() > 0:
-#     event = event_queue.get()
-#     if event.__class__ == SiteEvent:
-#         # Add site to beachline
-#         #process_site_event(event)
-#         pass
-#     elif event.__class__ == CircleEvent:
-#         # Remove cell from beachline
-#         #process_circle_event(event)
-#         pass
-
-# Note
-# ----
-# Parabola equation: y = ax^2 + bx + c
-# Alternative: focus and directrix
-# Focus: (xf, yf)
-# Directrix: yd
-# y = 1 / (2 * (yf - yd)) * (x - xf)^2 + (yf + yd) / 2
-
-class Node:
-    def __init__(self, value, left=None, right=None):
-        self.value = value
-        self.left = None
-        self.right = None
-        self.parent = None
-
-    def add_left(self, node):
-        self.left = node
-        node.parent = self
-    
-    def add_right(self, node):
-        self.right = node
-        node.parent = self
-    
-    def __repr__(self) -> str:
-        return f"Node({self.value})"
-    
-    def __str__(self) -> str:
-        return self.__repr__()
-    
-class Arc(Node):
-    def __init__(self, value, left=None, right=None):
-        super().__init__(value, left, right)
-        self.site = value
-        self.circle_events = []
-    
-    def __repr__(self):
-        return f"Arc({self.site})"
-
-    def __str__(self) -> str:
-        return self.__repr__()
-
-
-class BreakPoint(Node):
-    def __init__(self, value, left=None, right=None):
-        super().__init__(value, left, right)
-
 
 class Vertex:
     def __init__(self, x, y):
@@ -104,6 +54,10 @@ class Cell:
         self.site = None
         self.half_edges = []
 
+for p in points:
+    cells[p] = set()
+
+
 class HalfEdge:
     def __init__(self):
         self.site = None
@@ -130,6 +84,7 @@ class Arc(Node):
     def __init__(self, site):
         super().__init__()
         self.site = site
+        self.circle_events = []
 
 class BreakPoint(Node):
     def __init__(self, edge=None):
@@ -139,7 +94,51 @@ class BreakPoint(Node):
         self.right_site = None
     
     def get_x(self):
-        return self.left_site[0] + self.right_site[0] / 2
+        # solve parabola intersection for left_site and right_site
+        # use directrix formula
+        # y = 1 / (2 * (yf - yd)) * (x - xf)^2 + (yf + yd) / 2
+        return self.get_intersection()[0]
+
+    def get_intersection(self):
+        result = [0, 0]
+        p = self.left_site
+
+        if self.left_site[1] == self.right_site[1]:
+            result[0] = (self.left_site[0] + self.right_site[0]) / 2
+            if self.left_site[0] >= self.right_site[0]:
+                result[1] = 0 # Should this be height of pygame?
+        elif self.left_site[1] == sweep_line:
+            result[0] = self.left_site[0]
+            p = self.right_site
+        elif self.right_site[1] == sweep_line:
+            result[0] = self.right_site[0]
+        else:
+            # Compute intersection of parabolas
+            # Thank you codex!
+            a = 1 / (2 * (self.left_site[1] - sweep_line))
+            b1 = -2 * self.left_site[0] / (2 * (self.left_site[1] - sweep_line))
+            c1 = (self.left_site[0] ** 2 + self.left_site[1] ** 2 - sweep_line ** 2) / (
+                2 * (self.left_site[1] - sweep_line)
+            )
+            b2 = -2 * self.right_site[0] / (2 * (self.right_site[1] - sweep_line))
+            c2 = (
+                self.right_site[0] ** 2
+                + self.right_site[1] ** 2
+                - sweep_line ** 2
+            ) / (2 * (self.right_site[1] - sweep_line))
+            result[0] = (c2 - c1) / (a - b1)
+            result[1] = a * result[0] + c1
+
+        return result
+        a, b = p
+        x = result[0]
+        u = 2 * (b - 1)
+        if u == 0:
+            result[1] = 0
+        else:
+            result[1] = (x ** 2 + a ** 2 - 2 * a * x + b ** 2 - u * sweep_line) / u
+        return result
+        
 
 class BinaryTree:
     def __init__(self):
@@ -155,12 +154,7 @@ class BinaryTree:
         return node
 
     def split_arc(self, arc, new_site):
-        print("splitting arc")
-        print(f"arc={arc}")
-        print(f"arc_site={arc.site}")
-        print(f"new_site={new_site}")
         if arc.site[0] <= new_site[0]:
-            print("arc site was a left site")
             breakpoint = BreakPoint()
             breakpoint.left_site = arc.site
             breakpoint.right_site = new_site
@@ -172,7 +166,6 @@ class BinaryTree:
             else:
                 breakpoint.parent = arc.parent
                 arc.parent.right = breakpoint
-            print(f"parent={breakpoint.parent}")
             arc.parent = breakpoint
             breakpoint.left = arc
             sub_breakpoint = BreakPoint()
@@ -187,7 +180,6 @@ class BinaryTree:
             right_arc.parent = sub_breakpoint
             sub_breakpoint.right = right_arc
         else:
-            print("arc site was a right site")
             breakpoint = BreakPoint()
             breakpoint.left_site = new_site
             breakpoint.right_site = arc.site
@@ -220,17 +212,6 @@ class BinaryTree:
 
         if breakpoint.parent:
             assert breakpoint.parent.left == breakpoint or breakpoint.parent.right == breakpoint
-        print(f"breakpoint={breakpoint}")
-        print(f"sub_breakpoint={sub_breakpoint}")
-        print(f"left_arc={left_arc}")
-        print(f"right_arc={right_arc}")
-
-        print("printing breakpoint tree")
-        self.print_tree(breakpoint)
-
-        print(f"breakpoint.parent={breakpoint.parent}")
-        print(f"sub_breakpoint.parent={sub_breakpoint.parent}")
-
 
         if breakpoint.parent == None:
             self.root = breakpoint
@@ -239,11 +220,6 @@ class BinaryTree:
         while current.parent:
             current = current.parent
             
-
-        self.print_tree(self.root)
-        print([arc.site for arc in self.get_arcs()])
-        print(f"root={self.root}")
-
         # Add edge starts to cell table and vertex table? Could also do this when we finish...
         breakpoint.edge = HalfEdge()
         breakpoint.edge.start = [arc.site[0] + new_site[0] / 2, arc.site[1] + new_site[1] / 2]
@@ -264,7 +240,6 @@ class BinaryTree:
         return arcs
 
     def scan_for_circle_events(self):
-        print("scanning for circle events")
         arcs = self.get_arcs()
         for i, arc in enumerate(arcs):
             try:
@@ -278,12 +253,22 @@ class BinaryTree:
             else:
                 event = create_circle_event(left_arc, middle_arc, right_arc)
                 for arc in [left_arc, middle_arc, right_arc]:
-                    print(arc.circle_events)
                     if len(arc.circle_events) == 0:
                         arc.circle_events = []
                     arc.circle_events.append(event)
                 if event:
-                    get_event_queue().put((event.y, event))
+                    pygame.draw.circle(screen, (255, 255, 255), (int(event.x), int(event.y)), int(event.radius), 1)
+                    pygame.draw.circle(screen, (255, 255, 255), (int(event.x), int(event.y)), 1)
+                    # pygame.draw.triangle(screen, (255, 255, 255), event.get_triangle())
+                    pygame.draw.lines(screen, (255, 255, 255), True, event.get_triangle())
+                    for i, point in enumerate(event.points):
+                        pygame.draw.line(
+                            screen, (255, 255, 255),
+                            (int(event.x), int(event.y)),
+                            (int((point[0] + points[(i+1)%len(points)][0]) / 2), int((point[1] + points[(i+1)%len(points)][1]) / 2))
+                        )
+
+                    get_event_queue().put((event.get_tangent_point()[1], event))
     
     def remove_arc(self, x):
         arc = self.find_arc(x)
@@ -296,10 +281,11 @@ class BinaryTree:
         new_breakpoint = BreakPoint()
         grandparent = parent.parent
         great_grandparent = grandparent.parent
-        if great_grandparent.left == grandparent:
-            great_grandparent.left = new_breakpoint
-        else:
-            great_grandparent.right = new_breakpoint
+        if great_grandparent:
+            if great_grandparent.left == grandparent:
+                great_grandparent.left = new_breakpoint
+            else:
+                great_grandparent.right = new_breakpoint
         new_breakpoint.parent = great_grandparent
 
         if grandparent.left == parent:
@@ -377,7 +363,6 @@ def get_event_queue():
     return event_queue
 
 def create_circle_event(left, middle, right):
-    print("\033[2;31;43m creating circle event\033[0;0m")
     if not left or not right or not middle:
         return None
 
@@ -401,7 +386,6 @@ def circumcircle(p0, p1, p2):
     bx, by = p1
     cx, cy = p2
     d = (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by)) * 2
-    print(d)
     if d == 0:
         return None
     x = (
@@ -419,11 +403,12 @@ def circumcircle(p0, p1, p2):
 
 def scan_and_remove_circle_events(event_queue, site_position):
     for i, event in enumerate(event_queue.queue):
-        if event[1].__class__ == CircleEvent:
+        event = event[1]
+        if event.__class__ == CircleEvent:
             circle_center = (event.x, event.y)
             circle_radius = event.radius
             distance = ((site_position[0] - circle_center[0]) ** 2 + (site_position[1] - circle_center[1]) ** 2) ** (1 / 2)
-            if distance <= circle_radius:
+            if distance < circle_radius:
                 event_queue.queue.pop(i)
 
 voronoi_vertices = []
@@ -431,18 +416,17 @@ voronoi_vertices = []
 def process_site_event(event, binary_tree: BinaryTree):
     # Find arc above site
     arc = binary_tree.find_arc(event.x)
-    print("processing site event")
-    print(arc.site)
+    cells[(arc.site[0], arc.site[1])].add((event.x + arc.site[0] / 2, event.y + arc.site[1] / 2))
     # Split arc
     binary_tree.split_arc(arc, event.site)
-    print([arc.site for arc in binary_tree.get_arcs()])
     # Scan for circle events
     scan_and_remove_circle_events(get_event_queue(), (event.x, event.y))
 
 def process_circle_event(event, binary_tree):
-    event_pos = (event.x, event.y)
+    event_pos = event.get_tangent_point()
+    pygame.draw.circle(screen, (255, 255, 255), (event.x, event.y), int(event.radius), 1)
     voronoi_vertices.append(event_pos)
-    binary_tree.remove_arc(event.arc_node)
+    binary_tree.remove_arc(event.arc_node.site[0])
 
 
 # points = [(0, 0), (1, 1), (2, 2), (3, 3)]
@@ -453,10 +437,10 @@ def process_circle_event(event, binary_tree):
 
 binary_tree = BinaryTree()
 
-print(event_queue.queue)
+
+
 while event_queue.qsize() > 0:
     event = event_queue.get()
-    print(event)
     event = event[1]
     sweep_line = event.y
     if event.__class__ == SiteEvent:
@@ -465,12 +449,26 @@ while event_queue.qsize() > 0:
         else:
             process_site_event(event, binary_tree)
     elif event.__class__ == CircleEvent:
-        print("    \033[2;31;43m HIT A CIRCLE EVENT!!!!\033[0;0m")
         process_circle_event(event, binary_tree)
 
-print(binary_tree.get_arcs())
-for arc in binary_tree.get_arcs():
-    print(arc.site)
 sorted_arcs = sorted(binary_tree.get_arcs(), key=lambda arc: arc.site[0])
-print([arc.site for arc in sorted_arcs])
-print(voronoi_vertices)
+
+if __name__ == "__main__":
+
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+        
+        for vertex in voronoi_vertices:
+            v = (int(vertex[0]), int(vertex[1]))
+            pygame.draw.circle(screen, (0, 255, 0), v, 5)
+        for p in points:
+            pp = (int(p[0]), int(p[1]))
+            pygame.draw.circle(screen, (255, 0, 0), pp, 5)
+        
+        for points_ in cells.values():
+            for p in points_:
+                pygame.draw.circle(screen, (50, 50, 255), (int(p[0]), int(p[1])), 3)
+        pygame.display.flip()
