@@ -4,7 +4,7 @@ import random
 
 SCREEN_WIDTH = 640
 SCREEN_HEIGHT = 640
-MAX_DEPTH = 5
+MAX_DEPTH = 50
 
 
 class Vector3:
@@ -177,7 +177,8 @@ def get_color(pixel, objects, camera_position, max_depth, light):
             ),
             ray_direction,
         ).reflected_ray(point, normal)
-        if max_depth > 0:
+
+        if max_depth > 0 and point.z < 1000:
             reflection_color = get_color(
                 pixel,
                 objects,
@@ -190,7 +191,7 @@ def get_color(pixel, objects, camera_position, max_depth, light):
                 reflection_color[0], reflection_color[1], reflection_color[2]
             )
             color = Vector3(color[0], color[1], color[2])
-            reflection_coefficient = 0.8
+            reflection_coefficient = 0.5
             color = color.mult(1 - reflection_coefficient) + reflection_color.mult(
                 reflection_coefficient
             )
@@ -209,6 +210,7 @@ def color_combine(color1, color2, depth=1):
 
 if __name__ == "__main__":
     camera_position = Vector3(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 1000)
+    pixels = [[[] for i in range(SCREEN_WIDTH)] for j in range(SCREEN_HEIGHT)]
 
     # Initialize pygame
     pygame.init()
@@ -218,10 +220,10 @@ if __name__ == "__main__":
     screen.fill((0, 0, 0))
 
     sphere1 = Sphere(
-        Vector3(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, -1200), 350, (255, 0, 0)
+        Vector3(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, -1200), 350, (255, 255, 0)
     )
-    sphere2 = Sphere(Vector3(-300, 200, -1700), 800, (100, 0, 100))
-    light = Light(Vector3(SCREEN_WIDTH, 0, -500), 300, (255, 255, 255))
+    sphere2 = Sphere(Vector3(-300, 200, -1700), 800, (255, 255, 255))
+    light = Light(Vector3(SCREEN_WIDTH + 500, SCREEN_HEIGHT + 500, -1100), 30, (255, 255, 255))
 
     back_wall = Plane(Vector3(0, 0, -2000), Vector3(0, 0, 1), (255, 255, 255))
     left_wall = Plane(Vector3(-800, 0, 0), Vector3(1, 0, 0), (0, 0, 255))
@@ -260,7 +262,19 @@ if __name__ == "__main__":
 
             pygame.display.flip()
             for x in range(SCREEN_WIDTH):
-                color = get_color((x, y), objects, camera_position, MAX_DEPTH, light)
-                screen.set_at((x, y), color)
+                dx = random.random() - 0.5
+                dy = random.random() - 0.5
+                color = get_color((x + dx, y + dy), objects, camera_position, MAX_DEPTH, light)
+                pixels[y][x].append(color)
+                num_colors = len(pixels[y][x])
+                accumulated_color = [0, 0, 0]
+                for i in range(num_colors):
+                    accumulated_color[0] += pixels[y][x][i][0]
+                    accumulated_color[1] += pixels[y][x][i][1]
+                    accumulated_color[2] += pixels[y][x][i][2]
+                accumulated_color[0] = int(accumulated_color[0] / num_colors)
+                accumulated_color[1] = int(accumulated_color[1] / num_colors)
+                accumulated_color[2] = int(accumulated_color[2] / num_colors)
+                screen.set_at((x, y), accumulated_color)
 
     pygame.quit()
