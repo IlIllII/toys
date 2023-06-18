@@ -1,6 +1,5 @@
 import pygame
-
-import pygame
+import math
 
 class Vector3:
     def __init__(self, x, y, z):
@@ -30,6 +29,26 @@ class Vector3:
         return Vector3(self.x - other.x, self.y - other.y, self.z - other.z)
 
 
+class Plane:
+    def __init__(self, position, normal, color):
+        self.position = position
+        self.normal = normal
+        self.color = color
+    
+    def intersect(self, ray):
+        d = self.normal.dot(self.position)
+        if self.normal.dot(ray.direction) == 0:
+            return False
+        t = (d - self.normal.dot(ray.origin)) / self.normal.dot(ray.direction)
+        if t < 0:
+            return False
+        return t
+    
+    def get_normal(self, point):
+        return self.normal
+
+
+
 class Sphere:
     def __init__(self, center, radius, color):
         self.center = center
@@ -48,7 +67,7 @@ class Sphere:
         d = (self.radius * self.radius - d_squared) ** 0.5
         near_intersect = dp - d
         far_intersect = dp + d
-        return near_intersect, far_intersect
+        return min(near_intersect, far_intersect)
     
 
     def get_normal(self, point):
@@ -75,22 +94,25 @@ class Ray:
         n = normal
         n = n.mult(d.dot(n) * 2)
         return Ray(point, Vector3(d.x - n.x, d.y - n.y, d.z - n.z))
-    
 
-def get_direction_to(pixel, from_position):
+
+
+def get_direction_to(pixel, from_position, image_width, image_height, fov=math.pi/3):
+    aspect_ratio = image_width / image_height
     x, y = pixel
-    direction = Vector3(x - from_position.x, y - from_position.y, 0 - from_position.z)
+    u = (2 * (x + 0.5) / image_width - 1) * aspect_ratio
+    v = 1 - 2 * (y + 0.5) / image_height
+    d = 1 / math.tan(fov / 2)
+    direction = Vector3(u, v, -d)
     return direction
-
-
 
 
 if __name__ == "__main__":
     SCREEN_WIDTH = 640
-    SCREEN_HEIGHT = 480
+    SCREEN_HEIGHT = 640
     MAX_DEPTH = 5
     
-    camera_position = Vector3(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, -100)
+    camera_position = Vector3(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 1000)
 
     # Initialize pygame
     pygame.init()
@@ -99,54 +121,83 @@ if __name__ == "__main__":
 
     screen.fill((0, 0, 0))
 
-    sphere = Sphere(Vector3(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 100), 100, (255, 0, 0))
-    light = Light(Vector3(SCREEN_WIDTH, 0, 100), 200, (255, 255, 255))
+    sphere1 = Sphere(Vector3(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, -1200), 350, (255, 0, 0))
+    sphere2 = Sphere(Vector3(-300, 200, -1700), 800, (100, 0, 100))
+    light = Light(Vector3(SCREEN_WIDTH, 0, -1000), 300, (200, 200, 200))
+
+    back_wall = Plane(Vector3(0, 0, -2000), Vector3(0, 0, 1), (0, 255, 0))
+    left_wall = Plane(Vector3(-800, 0, 0), Vector3(1, 0, 0), (0, 0, 255))
+    bottom_wall = Plane(Vector3(0, SCREEN_HEIGHT + 800, 0), Vector3(0, -1, 0), (255, 255, 0))
+    top_wall = Plane(Vector3(0, -800, 0), Vector3(0, 1, 0), (255, 255, 255))
+    right_wall = Plane(Vector3(SCREEN_WIDTH + 800, 0, 0), Vector3(-1, 0, 0), (255, 0, 255))
+
+    objects = [sphere1, sphere2, light, back_wall, left_wall, bottom_wall, top_wall, right_wall]
 
     for y in range(SCREEN_HEIGHT):
         for x in range(SCREEN_WIDTH):
-            result_colors = []
-            for i in range(4):
-                pixel = (x, y)
-                jostled_pixel = (x + i / 4, y + i / 4)
-                direction = get_direction_to(pixel, camera_position)
-                ray = Ray(camera_position, direction)
-                intersects = sphere.intersect(ray)
-                if intersects:
-                    t0, t1 = intersects
-                    t = min(t0, t1)
-                    point = ray.get_point(t)
-                    result_colors.append(sphere.color)
-                    # color = sphere.color
-                    # screen.set_at(pixel, color)
-                    normal = sphere.get_normal(point)
-                    reflected_ray = ray.reflected_ray(point, normal)
-                    reflected_intersects = light.intersect(reflected_ray)
-                    if reflected_intersects:
-                        color = light.color
-                        rgb = result_colors[-1]
-                        result_colors.append(color)
+            intersects = []
+            normals = []
+            objs = []
+            color = (0, 0, 0)
+            ray_direction = get_direction_to((x, y), camera_position, SCREEN_WIDTH, SCREEN_HEIGHT)
+            for obj in objects:
+                intersect = obj.intersect(Ray(camera_position, ray_direction))
+                if intersect:
+                    intersects.append(intersect)
+                    normals.append(obj.get_normal(Ray(camera_position, ray_direction).get_point(intersect)))
+                    objs.append(obj)
+            
+            if len(intersects) > 0:
+                index = intersects.index(min(intersects))
+                intersect = intersects[index]
+                normal = normals[index]
+                point = Ray(camera_position, ray_direction).get_point(intersect)
+                color = objs[index].color
+            
+            screen.set_at((x, y), color)
+
+            # result_colors = []
+            # for i in range(4):
+            #     pixel = (x, y)
+            #     jostled_pixel = (x + i / 4, y + i / 4)
+            #     direction = get_direction_to(pixel, camera_position)
+            #     ray = Ray(camera_position, direction)
+            #     intersect = sphere.intersect(ray)
+            #     if intersect:
+            #         t = intersect
+            #         point = ray.get_point(t)
+            #         result_colors.append(sphere.color)
+            #         # color = sphere.color
+            #         # screen.set_at(pixel, color)
+            #         normal = sphere.get_normal(point)
+            #         reflected_ray = ray.reflected_ray(point, normal)
+            #         reflected_intersect = light.intersect(reflected_ray)
+            #         if reflected_intersect:
+            #             color = light.color
+            #             rgb = result_colors[-1]
+            #             result_colors.append(color)
                         
 
             
-            if len(result_colors) > 0:
-                r = 0
-                g = 0
-                b = 0
-                for color in result_colors:
-                    r += color[0]
-                    g += color[1]
-                    b += color[2]
-                r /= len(result_colors)
-                g /= len(result_colors)
-                b /= len(result_colors)
-                r = int(r)
-                g = int(g)
-                b = int(b)
-                r = r if r < 255 else 255
-                g = g if g < 255 else 255
-                b = b if b < 255 else 255
-                color = (r, g, b)
-                screen.set_at(pixel, color)
+            # if len(result_colors) > 0:
+            #     r = 0
+            #     g = 0
+            #     b = 0
+            #     for color in result_colors:
+            #         r += color[0]
+            #         g += color[1]
+            #         b += color[2]
+            #     r /= len(result_colors)
+            #     g /= len(result_colors)
+            #     b /= len(result_colors)
+            #     r = int(r)
+            #     g = int(g)
+            #     b = int(b)
+            #     r = r if r < 255 else 255
+            #     g = g if g < 255 else 255
+            #     b = b if b < 255 else 255
+            #     color = (r, g, b)
+            #     screen.set_at(pixel, color)
                     
 
             
