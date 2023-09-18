@@ -1,6 +1,6 @@
 # Voronoi
 
-Implementation of voronoi diagrams.
+>> Implementation of voronoi diagrams
 
 ## [Fortune's Algorithm](https://en.wikipedia.org/wiki/Fortune's_algorithm)
 

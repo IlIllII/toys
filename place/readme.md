@@ -1,6 +1,6 @@
 # Automated r/place
 
-This script will automate the placement of tiles on r/place every 5 minutes according to some template image that you provide.
+>> Automated placement of tiles in r/place
 
 ## Instructions
 
