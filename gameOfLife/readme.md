@@ -1,6 +1,6 @@
 # Game of Life
 
->> Game of life in the terminal
+> Game of life in the terminal
 
 ![GoL](https://user-images.githubusercontent.com/78166995/157757765-e4fc8eea-511f-4f47-a7fa-e2348f597c29.PNG)
 

@@ -1,6 +1,6 @@
 # Markov
 
->> Generate text using markov chains
+> Generate text using markov chains
 
 ```txt
 The Third Book of Called Leviticus And the LORD for the

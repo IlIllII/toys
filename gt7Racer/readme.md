@@ -1,6 +1,6 @@
 # GT7 Race Automation
 
->> Automated racing in Gran Turismo GT7
+> Automated racing in Gran Turismo GT7
 
 The `main.py` script allows you to automate racing circular tracks using PyAutoGUI and PS Remote Play. Depending on the car and track you race, you can make 400K/hr or more. NOTE: The track must have unidirectional turns, meaning every turn should be either left or right. I think the script should work on any platform.
 

@@ -1,6 +1,6 @@
 # gloc
 
->> Count lines of code in github repos
+> Count lines of code in github repos
 
 ## Example usage
 

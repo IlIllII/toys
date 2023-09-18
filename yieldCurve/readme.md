@@ -1,6 +1,6 @@
 # Yield Curve
 
->> Plot the current yield curve in your browser
+> Plot the current yield curve in your browser
 
 Load `yieldCurve.html` in your browser and it will scrape the most recent treasury yields from FRED and plot them for you.
 

@@ -1,6 +1,6 @@
 # Automated r/place
 
->> Automated placement of tiles in r/place
+> Automated placement of tiles in r/place
 
 ## Instructions
 

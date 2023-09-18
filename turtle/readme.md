@@ -1,6 +1,6 @@
 # Turtle
 
->> Turtle graphics
+> Turtle graphics
 
 <div align="center">
   <h1>Turtles</h1>
