@@ -1,16 +1,16 @@
 import pygame
 
-CELL_DIM = 10
+CELL_DIM = 5
 INACTIVE_COLOR = (0, 0, 0)
 ACTIVE_COLOR = (255, 255, 255)
 MANUALLY_PLACED_COLOR = (100, 140, 250)
-BOARD_DIM = (100, 100)
+BOARD_DIM = (200, 100)
 
 
 def update_cell_state(board, x, y):
-    above_left_alive = board[x - 1][y - 1] == 1
-    above_middle_alive = board[x][y - 1] == 1
-    above_right_alive = board[x + 1][y - 1] == 1
+    above_left_alive = board[y - 1][x - 1] == 1
+    above_middle_alive = board[y - 1][x] == 1
+    above_right_alive = board[y - 1][x + 1] == 1
     res = 0
 
     if above_left_alive and above_middle_alive and above_right_alive:
@@ -24,18 +24,18 @@ def update_cell_state(board, x, y):
     else:
         res = 1
 
-    board[x][y] = res
+    board[y][x] = res
 
 
 def update_board_state(board, manually_placed_tiles):
-    for y in range(BOARD_DIM[0] - 1, 0, -1):
-        for x in range(BOARD_DIM[1]):
+    for y in range(BOARD_DIM[1] - 1, 0, -1):
+        for x in range(BOARD_DIM[0] - 1):
             if is_border_cell(x, y):
                 continue
             else:
                 update_cell_state(board, x, y)
                 if (x, y) in manually_placed_tiles:
-                    board[x][y] = 1
+                    board[y][x] = 1
 
 
 def is_border_cell(x, y):
@@ -51,11 +51,11 @@ def draw_cell(screen, x, y, color):
 
 
 def draw_board(screen, board, manually_placed_tiles):
-    for x in range(BOARD_DIM[1]):
-        for y in range(BOARD_DIM[0]):
+    for x in range(BOARD_DIM[0]):
+        for y in range(BOARD_DIM[1]):
             if (x, y) in manually_placed_tiles:
                 draw_cell(screen, x, y, MANUALLY_PLACED_COLOR)
-            elif board[x][y] == 0:
+            elif board[y][x] == 0:
                 draw_cell(screen, x, y, INACTIVE_COLOR)
             else:
                 draw_cell(screen, x, y, ACTIVE_COLOR)
@@ -71,13 +71,16 @@ def process_events(board, manually_placed_tiles):
             pygame.quit()
             return
         elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-            board = [[0 for i in range(BOARD_DIM[0])] for j in range(BOARD_DIM[1])]
+            board = [[0 for x in range(BOARD_DIM[0])] for y in range(BOARD_DIM[1])]
             manually_placed_tiles.clear()
         elif event.type == pygame.MOUSEBUTTONDOWN:
             x, y = pygame.mouse.get_pos()
             x = x // CELL_DIM
             y = y // CELL_DIM
-            board[x][y] = 1 - board[x][y]
+            if x < BOARD_DIM[0] and y < BOARD_DIM[1]:
+                print(len(board))
+                print(len(board[0]))
+                board[y][x] = 1 - board[y][x]
             if (x, y) in manually_placed_tiles:
                 manually_placed_tiles.remove((x, y))
             else:
@@ -95,7 +98,7 @@ def main_loop(screen, board, manually_placed_tiles):
 def main():
     pygame.init()
     screen = pygame.display.set_mode((BOARD_DIM[0] * CELL_DIM, BOARD_DIM[1] * CELL_DIM))
-    board = [[0 for i in range(BOARD_DIM[0])] for j in range(BOARD_DIM[1])]
+    board = [[0 for x in range(BOARD_DIM[0])] for y in range(BOARD_DIM[1])]
     manually_placed_tiles = set()
 
     main_loop(screen, board, manually_placed_tiles)
