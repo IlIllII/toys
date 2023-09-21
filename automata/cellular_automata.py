@@ -97,10 +97,10 @@ def main_loop(screen, board, manually_placed_tiles):
 
 def main():
     pygame.init()
+    pygame.display.set_caption("Cellular Automata")
     screen = pygame.display.set_mode((BOARD_DIM[0] * CELL_DIM, BOARD_DIM[1] * CELL_DIM))
     board = [[0 for x in range(BOARD_DIM[0])] for y in range(BOARD_DIM[1])]
     manually_placed_tiles = set()
-
     main_loop(screen, board, manually_placed_tiles)
 
 
