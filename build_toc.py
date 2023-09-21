@@ -5,7 +5,7 @@ TITLE_KEY = "title"
 TITLE_PREFIX = "# "
 
 DESCRIPTION_KEY = "description"
-DESCRIPTION_PREFIX = ">> "
+DESCRIPTION_PREFIX = "> "
 
 
 def get_top_directory():
