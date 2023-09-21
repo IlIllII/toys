@@ -28,8 +28,8 @@ def update_cell_state(board, x, y):
 
 
 def update_board_state(board, manually_placed_tiles):
-    for x in range(BOARD_DIM[1]):
-        for y in range(BOARD_DIM[0]):
+    for y in range(BOARD_DIM[0] - 1, 0, -1):
+        for x in range(BOARD_DIM[1]):
             if is_border_cell(x, y):
                 continue
             else:
