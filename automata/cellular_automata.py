@@ -1,5 +1,6 @@
 import pygame
 
+
 CELL_DIM = 5
 INACTIVE_COLOR = (0, 0, 0)
 ACTIVE_COLOR = (255, 255, 255)
@@ -63,28 +64,20 @@ def draw_board(screen, board, manually_placed_tiles):
 
 def process_events(board, manually_placed_tiles):
     for event in pygame.event.get():
-        if (
-            event.type == pygame.QUIT
-            or event.type == pygame.KEYDOWN
-            and event.key == pygame.K_ESCAPE
+        if event.type == pygame.QUIT or (
+            event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE
         ):
             pygame.quit()
             return
         elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-            board = [[0 for x in range(BOARD_DIM[0])] for y in range(BOARD_DIM[1])]
+            board = [[0] * BOARD_DIM[0] for _ in range(BOARD_DIM[1])]
             manually_placed_tiles.clear()
         elif event.type == pygame.MOUSEBUTTONDOWN:
             x, y = pygame.mouse.get_pos()
-            x = x // CELL_DIM
-            y = y // CELL_DIM
+            x, y = x // CELL_DIM, y // CELL_DIM
             if x < BOARD_DIM[0] and y < BOARD_DIM[1]:
-                print(len(board))
-                print(len(board[0]))
                 board[y][x] = 1 - board[y][x]
-            if (x, y) in manually_placed_tiles:
-                manually_placed_tiles.remove((x, y))
-            else:
-                manually_placed_tiles.add((x, y))
+            manually_placed_tiles.symmetric_difference_update({(x, y)})
 
 
 def main_loop(screen, board, manually_placed_tiles):
