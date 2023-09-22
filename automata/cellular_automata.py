@@ -5,7 +5,59 @@ CELL_DIM = 5
 INACTIVE_COLOR = (0, 0, 0)
 ACTIVE_COLOR = (255, 255, 255)
 MANUALLY_PLACED_COLOR = (100, 140, 250)
-BOARD_DIM = (200, 100)
+BOARD_DIMS = (200, 100)
+
+
+def main():
+    pygame.init()
+    pygame.display.set_caption("Cellular Automata")
+    screen = pygame.display.set_mode(
+        (BOARD_DIMS[0] * CELL_DIM, BOARD_DIMS[1] * CELL_DIM)
+    )
+    board = blank_board(BOARD_DIMS)
+    manually_placed_tiles = set()
+    main_loop(screen, board, manually_placed_tiles)
+
+
+def blank_board(board_dimensions):
+    board = [
+        [0 for x in range(board_dimensions[0])] for y in range(board_dimensions[1])
+    ]
+    return board
+
+
+def main_loop(screen, board, manually_placed_tiles):
+    while True:
+        process_events(board, manually_placed_tiles)
+        update_board_state(board, manually_placed_tiles)
+        draw_board(screen, board, manually_placed_tiles)
+        pygame.display.update()
+
+
+def process_events(board, manually_placed_tiles):
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT or (
+            event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE
+        ):
+            pygame.quit()
+            return
+        elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+            board = blank_board(BOARD_DIMS)
+            manually_placed_tiles.clear()
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            x, y = pygame.mouse.get_pos()
+            x, y = x // CELL_DIM, y // CELL_DIM
+            if x < BOARD_DIMS[0] and y < BOARD_DIMS[1]:
+                board[y][x] = 1 - board[y][x]
+            manually_placed_tiles.symmetric_difference_update({(x, y)})
+
+
+def update_board_state(board, manually_placed_tiles):
+    for y in range(BOARD_DIMS[1] - 1, 0, -1):
+        for x in range(1, BOARD_DIMS[0] - 1):
+            update_cell_state(board, x, y)
+            if (x, y) in manually_placed_tiles:
+                board[y][x] = 1
 
 
 def update_cell_state(board, x, y):
@@ -28,32 +80,9 @@ def update_cell_state(board, x, y):
     board[y][x] = res
 
 
-def update_board_state(board, manually_placed_tiles):
-    for y in range(BOARD_DIM[1] - 1, 0, -1):
-        for x in range(BOARD_DIM[0] - 1):
-            if is_border_cell(x, y):
-                continue
-            else:
-                update_cell_state(board, x, y)
-                if (x, y) in manually_placed_tiles:
-                    board[y][x] = 1
-
-
-def is_border_cell(x, y):
-    return x == 0 or y == 0 or x == BOARD_DIM[0] - 1 or y == BOARD_DIM[1] - 1
-
-
-def draw_cell(screen, x, y, color):
-    pygame.draw.rect(
-        screen,
-        color,
-        (x * CELL_DIM, y * CELL_DIM, CELL_DIM, CELL_DIM),
-    )
-
-
 def draw_board(screen, board, manually_placed_tiles):
-    for x in range(BOARD_DIM[0]):
-        for y in range(BOARD_DIM[1]):
+    for x in range(BOARD_DIMS[0]):
+        for y in range(BOARD_DIMS[1]):
             if (x, y) in manually_placed_tiles:
                 draw_cell(screen, x, y, MANUALLY_PLACED_COLOR)
             elif board[y][x] == 0:
@@ -62,39 +91,12 @@ def draw_board(screen, board, manually_placed_tiles):
                 draw_cell(screen, x, y, ACTIVE_COLOR)
 
 
-def process_events(board, manually_placed_tiles):
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT or (
-            event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE
-        ):
-            pygame.quit()
-            return
-        elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-            board = [[0] * BOARD_DIM[0] for _ in range(BOARD_DIM[1])]
-            manually_placed_tiles.clear()
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            x, y = pygame.mouse.get_pos()
-            x, y = x // CELL_DIM, y // CELL_DIM
-            if x < BOARD_DIM[0] and y < BOARD_DIM[1]:
-                board[y][x] = 1 - board[y][x]
-            manually_placed_tiles.symmetric_difference_update({(x, y)})
-
-
-def main_loop(screen, board, manually_placed_tiles):
-    while True:
-        process_events(board, manually_placed_tiles)
-        update_board_state(board, manually_placed_tiles)
-        draw_board(screen, board, manually_placed_tiles)
-        pygame.display.update()
-
-
-def main():
-    pygame.init()
-    pygame.display.set_caption("Cellular Automata")
-    screen = pygame.display.set_mode((BOARD_DIM[0] * CELL_DIM, BOARD_DIM[1] * CELL_DIM))
-    board = [[0 for x in range(BOARD_DIM[0])] for y in range(BOARD_DIM[1])]
-    manually_placed_tiles = set()
-    main_loop(screen, board, manually_placed_tiles)
+def draw_cell(screen, x, y, color):
+    pygame.draw.rect(
+        screen,
+        color,
+        (x * CELL_DIM, y * CELL_DIM, CELL_DIM, CELL_DIM),
+    )
 
 
 if __name__ == "__main__":
