@@ -6,16 +6,6 @@ OFF_CELL = " "
 ON_CELL = "O"
 
 
-# def symbol_generator():
-#     symbols = ["!", "@", "#", "$", "%", "^", "&", "*", "+", "="]
-#     index = 0
-#     while True:
-#         yield symbols[index]
-#         index = (index + 1) % len(symbols)
-
-# symbols = symbol_generator()
-
-
 class Board:
     def __init__(self, width: int, height: int) -> None:
         self.cells = [[OFF_CELL for x in range(width)] for y in range(height)]
@@ -97,6 +87,7 @@ class Board:
             else:
                 init_symbol_generator()
                 return next(Board.get_symbol._symbol_generator)
+
         bits = get_bit_encoded_neighbors(surrounding)
         symbol = get_symbol_from_bits(bits)
         return symbol
