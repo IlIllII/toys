@@ -1,20 +1,25 @@
 import time
-WIDTH = 50
-HEIGHT = 50
+import sys
+import os
+
+WIDTH = 7
+HEIGHT = 7
+
+HEIGHT, WIDTH = os.popen('stty size', 'r').read().split()
+WIDTH = int(WIDTH) - 1
+HEIGHT = int(HEIGHT) - 2
 
 
 class Board:
-
-    def __init__(self) -> None:
-        dims = (HEIGHT, WIDTH)
-        self.cells = [[" " for x in range(WIDTH)] for y in range(HEIGHT)]
+    def __init__(self, w, h) -> None:
+        width = w
+        height = h
+        self.cells = [[" " for x in range(w)] for y in range(h)]
         self.set(3, 2, "O")
         self.set(3, 3, "O")
         self.set(3, 4, "O")
-        # self.set(3, 5, "O")
         self.set(4, 5, "O")
         self.set(5, 5, "O")
-
 
     def get(self, x, y):
         return self.cells[y % len(self.cells)][x % len(self.cells[y % len(self.cells)])]
@@ -56,9 +61,6 @@ class Board:
                         new_cells[y][x] = "O"
                     else:
                         new_cells[y][x] = " "
-
-                # new_cells[y][x] = "O" if new_cells[y][(x+1) % len(new_cells[y])] == "O" else " "
-
         
         self.cells = new_cells
 
@@ -73,11 +75,22 @@ class Board:
 
 
 if __name__ == "__main__":
-    board = Board()
+    board = Board(WIDTH, HEIGHT)
     board.process_step()
+    os.system("clear")
 
     for i in range(500):
         board.process_step()
-        print(board)
+        
+        # os.system("clear")
+        # sys.stdout.write(f"\033[({HEIGHT})A")
+        print("\033[H")
+        # for L in range(HEIGHT):
+        #     if L < HEIGHT - 1:
+        #         sys.stdout.write("\033[B")
+        # sys.stdout.write(f"\033[({HEIGHT})A")
+
+
+        print(board, end="", flush=True)
         time.sleep(0.1)
     print(board)
