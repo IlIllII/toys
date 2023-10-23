@@ -27,7 +27,7 @@ class Board:
             for j in [x - 1, x, x + 1]:
                 if i == y and j == x:
                     continue
-                elif self.get(j, i) == ON_CELL:
+                elif ON_CELL in self.get(j, i):
                     count += 1
         return count
 
@@ -37,17 +37,17 @@ class Board:
             new_cells.append(row.copy())
         for y in range(len(new_cells)):
             for x in range(len(new_cells[y])):
-                if self.get(x, y) == ON_CELL:
+                if ON_CELL in self.get(x, y):
                     surrounding = self.num_surrounding(x, y)
                     valid = [2, 3]
                     if surrounding not in valid:
                         new_cells[y][x] = OFF_CELL
                     else:
-                        new_cells[y][x] = ON_CELL
+                        new_cells[y][x] = "\033[94m" + ON_CELL + "\033[0m"
                 if self.get(x, y) == OFF_CELL:
                     surrounding = self.num_surrounding(x, y)
                     if surrounding in [3]:
-                        new_cells[y][x] = ON_CELL
+                        new_cells[y][x] = "\033[91m" + ON_CELL + "\033[0m"
                     else:
                         new_cells[y][x] = OFF_CELL
 
