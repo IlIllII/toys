@@ -1,16 +1,19 @@
 import time
 import os
+from typing import List, Tuple
 
+OFF_CELL = " "
+ON_CELL = "O"
 
 class Board:
-    def __init__(self, width, height) -> None:
-        self.cells = [[" " for x in range(width)] for y in range(height)]
+    def __init__(self, width: int, height: int) -> None:
+        self.cells = [[OFF_CELL for x in range(width)] for y in range(height)]
         self.populate_tetronimo()
 
-    def get(self, x, y):
+    def get(self, x: int, y: int) -> str:
         return self.cells[y % len(self.cells)][x % len(self.cells[y % len(self.cells)])]
 
-    def set(self, x, y, val):
+    def set(self, x: int, y: int, val: str) -> None:
         try:
             self.cells[y % len(self.cells)][
                 x % len(self.cells[y % len(self.cells)])
@@ -18,48 +21,48 @@ class Board:
         except:
             raise Exception(f"cell {x}, {y} was not a valid board position")
 
-    def num_surrounding(self, x, y):
+    def num_surrounding(self, x: int, y: int) -> int:
         count = 0
         for i in [y - 1, y, y + 1]:
             for j in [x - 1, x, x + 1]:
                 if i == y and j == x:
                     continue
-                elif self.get(j, i) == "O":
+                elif self.get(j, i) == ON_CELL:
                     count += 1
         return count
 
-    def process_step(self):
+    def process_step(self) -> None:
         new_cells = []
         for row in self.cells:
             new_cells.append(row.copy())
         for y in range(len(new_cells)):
             for x in range(len(new_cells[y])):
-                if self.get(x, y) == "O":
+                if self.get(x, y) == ON_CELL:
                     surrounding = self.num_surrounding(x, y)
                     valid = [2, 3]
                     if surrounding not in valid:
-                        new_cells[y][x] = " "
+                        new_cells[y][x] = OFF_CELL
                     else:
-                        new_cells[y][x] = "O"
-                if self.get(x, y) == " ":
+                        new_cells[y][x] = ON_CELL
+                if self.get(x, y) == OFF_CELL:
                     surrounding = self.num_surrounding(x, y)
                     if surrounding in [3]:
-                        new_cells[y][x] = "O"
+                        new_cells[y][x] = ON_CELL
                     else:
-                        new_cells[y][x] = " "
+                        new_cells[y][x] = OFF_CELL
 
         self.cells = new_cells
 
-    def populate_tetronimo(self):
+    def populate_tetronimo(self) -> None:
         x = int(len(self.cells[0]) / 2)
         y = int(len(self.cells) / 2)
-        self.set(x + 3, y + 2, "O")
-        self.set(x + 3, y + 3, "O")
-        self.set(x + 3, y + 4, "O")
-        self.set(x + 4, y + 5, "O")
-        self.set(x + 5, y + 5, "O")
+        self.set(x + 3, y + 2, ON_CELL)
+        self.set(x + 3, y + 3, ON_CELL)
+        self.set(x + 3, y + 4, ON_CELL)
+        self.set(x + 4, y + 5, ON_CELL)
+        self.set(x + 5, y + 5, ON_CELL)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         s = ""
         for row in range(len(self.cells)):
             for c in self.cells[row]:
@@ -68,12 +71,16 @@ class Board:
         return s
 
 
-if __name__ == "__main__":
-    height, width = os.popen("stty size", "r").read().split()
-    width = int(width) - 1
-    height = int(height) - 2
+def get_terminal_dims() -> Tuple[int, int]:
+    h, w = os.popen("stty size", "r").read().split()
+    width = int(w) - 1
+    height = int(h) - 2
+    return width, height
 
-    board = Board(width, height)
+
+if __name__ == "__main__":
+    
+    board = Board(*get_terminal_dims())
     board.process_step()
     os.system("clear")
 
