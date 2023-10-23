@@ -19,4 +19,5 @@ A collection of toy programs.
 | [Fun Camera](./funCamera/README.md) | Masking humans in a webcam feed |
 | [GT7 Race Automation](./gt7Racer/README.md) | Automated racing in Gran Turismo GT7 |
 | [Voronoi](./voronoi/README.md) | Implementation of voronoi diagrams |
+| [Game of Life v2](./plane-game/README.md) | Game of life, but colorized |
 | [Markov](./markov/README.md) | Generate text using markov chains |
