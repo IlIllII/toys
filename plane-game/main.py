@@ -15,6 +15,7 @@ ON_CELL = "O"
 
 # symbols = symbol_generator()
 
+
 class Board:
     def __init__(self, width: int, height: int) -> None:
         self.cells = [[OFF_CELL for x in range(width)] for y in range(height)]
@@ -54,29 +55,14 @@ class Board:
         return surrounding
 
     def get_symbol(self, surrounding: List[str]):
-        bits = 0
-        for i, cell in enumerate(surrounding):
-            if cell == ON_CELL:
-                bits += 1 << i
-        bitmap = {
-            0b11100000: "_",
-            0b00000111: "-",
-            0b00101001: "]",
-            0b10010100: "[",
-            0b11010000: "/",
-            0b00001011: "/",
-            0b01101000: "\\",
-            0b00010110: "\\",
-            0b01011000: "^",
-            0b00011010: "v",
-            0b10100100: "/",
-            0b00100101: "/",
-            0b10100001: "\\",
-            0b10000101: "\\",
-        }
-        if bits in bitmap:
-            return bitmap[bits]
-        else:
+        def get_bit_encoded_neighbors(surrounding: List[str]) -> int:
+            bits = 0
+            for i, cell in enumerate(surrounding):
+                if cell == ON_CELL:
+                    bits += 1 << i
+            return bits
+
+        def init_symbol_generator():
             if not hasattr(Board.get_symbol, "_symbol_generator"):
 
                 def _symbol_generator():
@@ -85,8 +71,35 @@ class Board:
                     while True:
                         yield symbols[index]
                         index = (index + 1) % len(symbols)
+
                 Board.get_symbol._symbol_generator = _symbol_generator()
-            return next(Board.get_symbol._symbol_generator)
+
+        def get_symbol_from_bits(bits: int):
+            bitmap = {
+                0b11100000: "_",
+                0b00000111: "-",
+                0b00101001: "]",
+                0b10010100: "[",
+                0b11010000: "/",
+                0b00001011: "/",
+                0b01101000: "\\",
+                0b00010110: "\\",
+                0b01011000: "^",
+                0b00011010: "v",
+                0b10100100: "/",
+                0b00100101: "/",
+                0b10100001: "\\",
+                0b10000101: "\\",
+            }
+
+            if bits in bitmap:
+                return bitmap[bits]
+            else:
+                init_symbol_generator()
+                return next(Board.get_symbol._symbol_generator)
+        bits = get_bit_encoded_neighbors(surrounding)
+        symbol = get_symbol_from_bits(bits)
+        return symbol
 
     def process_step(self) -> None:
         new_cells = []
