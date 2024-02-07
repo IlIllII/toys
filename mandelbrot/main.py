@@ -1,10 +1,10 @@
-from numba import njit, prange
+from numba import njit, prange, jit
 import pygame
 import numpy as np
 import matplotlib.pyplot as plt
 
 pygame.init()
-width, height = 1200, 400
+width, height = 2400, 800
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Mandelbrot Set Visualization")
 
@@ -14,7 +14,6 @@ mandelbrot_shift_x = -0.5
 julia_zoom = 1
 julia_shift_x = 0
 julia_shift_y = 0
-
 
 
 def mandelbrot(c, max_iter):
@@ -57,37 +56,42 @@ def draw_mandelbrot():
             screen.set_at((x, y), (green, green, 255))
 
 
-def draw_julia(c):
-    julia_width, julia_height = 600, 400
-    x = np.linspace(-2, 2, julia_width)
-    y = np.linspace(-1, 1, julia_height)
-    X, Y = np.meshgrid(x, y)
-    Z = X + 1j * Y
-    C = np.full(Z.shape, c)
-    iterations = np.zeros(Z.shape, dtype=int)
-    for i in range(max_iter):
-        mask = np.abs(Z) < 2
-        Z[mask] = Z[mask] ** 2 + C[mask]
-        iterations[mask] = i
-    iterations[iterations == max_iter] = 0
+@njit(parallel=True)
+def compute_julia_set(width, height, c, max_iter):
+    result = np.zeros((height, width), dtype=np.int32)
+    x_span = np.linspace(-2, 2, width)
+    y_span = np.linspace(-2, 2, height)
 
-    iterations = iterations / max_iter
-    surface = pygame.surfarray.make_surface(
-        (plt.cm.viridis(iterations)[:, :, :3] * 255).swapaxes(0, 1)
-    )
-    screen.blit(surface, (600, 0))
+    for i in prange(height):
+        for j in range(width):
+            z = complex(x_span[j], y_span[i])
+            n = 0
+            while abs(z) <= 2 and n < max_iter:
+                z = z**2 + c
+                n += 1
+            result[i, j] = n
+    return result
+
+
+def get_julia_surface(c, width, height, max_iter):
+    julia_data = compute_julia_set(width, height, c, max_iter)
+    normalized_data = julia_data / max_iter
+    colormap = plt.get_cmap("hsv")
+    colored_data = colormap(normalized_data)
+    julia_image = (colored_data[:, :, :3] * 255).astype(np.uint8).swapaxes(0, 1)
+    return pygame.surfarray.make_surface(julia_image)
 
 
 def main():
     running = True
     draw_mandelbrot()
     while running:
+        global max_iter
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
-                    global max_iter
                     max_iter += 1
                 elif event.key == pygame.K_DOWN:
                     max_iter -= 1
@@ -96,8 +100,8 @@ def main():
         mouse_on_mandelbrot = mouse_x < width // 2
         if mouse_on_mandelbrot:
             c = xy_to_mandelbrot(mouse_x, mouse_y)
-            draw_julia(c)
-
+            julia_surface = get_julia_surface(c, width // 2, height, max_iter)
+            screen.blit(julia_surface, (width // 2, 0))
         pygame.display.flip()
 
     pygame.quit()
