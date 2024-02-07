@@ -1,5 +1,4 @@
-from turtle import color
-from numba import njit, prange, jit
+from numba import njit, prange
 import pygame
 import numpy as np
 import matplotlib.pyplot as plt
@@ -91,6 +90,27 @@ def get_label_surface(text, font_size, color):
     return font.render(text, True, color)
 
 
+def draw_info_panel(color_maps):
+    padding = 10
+    font_height = 50
+    white = (255, 255, 255)
+    black = (0, 0, 0)
+    iter_text = get_label_surface(f"Max Iterations: {max_iter}", font_height, white)
+    color_text = get_label_surface(f"Color: {color_maps.get_map()}", font_height, white)
+    max_width = max(iter_text.get_width(), color_text.get_width())
+    max_height = color_text.get_height() + iter_text.get_height() + padding * 2
+
+    for border_width, color in enumerate([black, white]):
+        pygame.draw.rect(
+            screen,
+            color,
+            (padding, padding, max_width + padding * 2, max_height),
+            width=border_width,
+        )
+    screen.blit(iter_text, (padding * 2, padding * 2))
+    screen.blit(color_text, (padding * 2, max_height - color_text.get_height()))
+
+
 def main():
     running = True
     mandelbrot_surface = draw_mandelbrot()
@@ -122,29 +142,8 @@ def main():
             screen.blit(julia_surface, (width // 2, 0))
 
         screen.blit(mandelbrot_surface, (0, 0))
-        padding = 10
-        font_height = 30
-        iter_text = get_label_surface(
-            f"Max Iterations: {max_iter}", font_height, (255, 255, 255)
-        )
-        color_text = get_label_surface(
-            f"Color: {color_maps.get_map()}", font_height, (255, 255, 255)
-        )
-        max_width = max(iter_text.get_width(), color_text.get_width())
 
-        pygame.draw.rect(
-            screen,
-            (0, 0, 0),
-            (padding, padding, max_width + padding * 2, font_height * 2),
-        )
-        pygame.draw.rect(
-            screen,
-            (255, 255, 255),
-            (padding, padding, max_width + padding * 2, font_height * 2),
-            width=1,
-        )
-        screen.blit(iter_text, (padding * 2, padding * 2))
-        screen.blit(color_text, (padding * 2, font_height + padding))
+        draw_info_panel(color_maps)
         pygame.display.flip()
 
     pygame.quit()
