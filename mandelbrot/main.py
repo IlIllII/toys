@@ -69,6 +69,12 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    global max_iter
+                    max_iter += 1
+                elif event.key == pygame.K_DOWN:
+                    max_iter -= 1
 
         draw_mandelbrot()
 
