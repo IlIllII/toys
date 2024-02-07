@@ -1,3 +1,4 @@
+from numba import njit, prange
 import pygame
 import numpy as np
 import matplotlib.pyplot as plt
@@ -13,6 +14,7 @@ mandelbrot_shift_x = -0.5
 julia_zoom = 1
 julia_shift_x = 0
 julia_shift_y = 0
+
 
 
 def mandelbrot(c, max_iter):
@@ -61,12 +63,13 @@ def draw_julia(c):
     y = np.linspace(-1, 1, julia_height)
     X, Y = np.meshgrid(x, y)
     Z = X + 1j * Y
+    C = np.full(Z.shape, c)
     iterations = np.zeros(Z.shape, dtype=int)
-
     for i in range(max_iter):
         mask = np.abs(Z) < 2
-        Z[mask] = Z[mask] ** 2 + c
+        Z[mask] = Z[mask] ** 2 + C[mask]
         iterations[mask] = i
+    iterations[iterations == max_iter] = 0
 
     iterations = iterations / max_iter
     surface = pygame.surfarray.make_surface(
@@ -77,6 +80,7 @@ def draw_julia(c):
 
 def main():
     running = True
+    draw_mandelbrot()
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -87,8 +91,6 @@ def main():
                     max_iter += 1
                 elif event.key == pygame.K_DOWN:
                     max_iter -= 1
-
-        draw_mandelbrot()
 
         mouse_x, mouse_y = pygame.mouse.get_pos()
         mouse_on_mandelbrot = mouse_x < width // 2
