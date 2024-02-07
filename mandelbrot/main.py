@@ -1,4 +1,4 @@
-from numba import njit, prange
+from numba import njit, prange # type: ignore
 import pygame
 import numpy as np
 import matplotlib.pyplot as plt
@@ -17,7 +17,7 @@ julia_shift_x = 0
 julia_shift_y = 0
 
 
-def mandelbrot(c, max_iter):
+def mandelbrot(c: complex, max_iter: int) -> int:
     z = c
     for n in range(max_iter):
         if abs(z) > 2:
@@ -26,7 +26,7 @@ def mandelbrot(c, max_iter):
     return max_iter
 
 
-def julia(c, max_iter, z):
+def julia(c: complex, max_iter: int, z: complex) -> int:
     for n in range(max_iter):
         if abs(z) > 2:
             return n
@@ -34,21 +34,21 @@ def julia(c, max_iter, z):
     return max_iter
 
 
-def xy_to_mandelbrot(x, y):
+def xy_to_mandelbrot(x: int, y: int) -> complex:
     return complex(
         3.5 * (x / (width / 2) - 0.5) / zoom + mandelbrot_shift_x,
         2 * (y / height - 0.5) / zoom,
     )
 
 
-def xy_to_julia(x, y):
+def xy_to_julia(x: int, y: int) -> complex:
     return complex(
         3.5 * ((x - width / 2) / (width / 2) - 0.5) / julia_zoom + julia_shift_x,
         2 * (y / height - 0.5) / julia_zoom + julia_shift_y,
     )
 
 
-def draw_mandelbrot():
+def draw_mandelbrot() -> pygame.Surface:
     surface = pygame.Surface((width // 2, height))
     for x in range(width // 2):
         for y in range(height):
@@ -60,7 +60,7 @@ def draw_mandelbrot():
 
 
 @njit(parallel=True)
-def compute_julia_set(width, height, c, max_iter):
+def compute_julia_set(width: int, height: int, c: complex, max_iter: int) -> np.ndarray:
     result = np.zeros((height, width), dtype=np.int32)
     x_span = np.linspace(-2, 2, width)
     y_span = np.linspace(-2, 2, height)
@@ -76,7 +76,9 @@ def compute_julia_set(width, height, c, max_iter):
     return result
 
 
-def get_julia_surface(c, width, height, max_iter, color_str):
+def get_julia_surface(
+    c: complex, width: int, height: int, max_iter: int, color_str: str
+) -> pygame.Surface:
     julia_data = compute_julia_set(width, height, c, max_iter)
     normalized_data = julia_data / max_iter
     colormap = plt.get_cmap(color_str)
@@ -85,12 +87,14 @@ def get_julia_surface(c, width, height, max_iter, color_str):
     return pygame.surfarray.make_surface(julia_image)
 
 
-def get_label_surface(text, font_size, color):
+def get_label_surface(
+    text: str, font_size: int, color: tuple[int, int, int]
+) -> pygame.Surface:
     font = pygame.font.Font(None, font_size)
     return font.render(text, True, color)
 
 
-def draw_info_panel(color_maps):
+def draw_info_panel(screen: pygame.Surface, color_maps: ColorMaps) -> None:
     padding = 10
     font_height = 50
     white = (255, 255, 255)
@@ -143,7 +147,7 @@ def main():
 
         screen.blit(mandelbrot_surface, (0, 0))
 
-        draw_info_panel(color_maps)
+        draw_info_panel(screen, color_maps)
         pygame.display.flip()
 
     pygame.quit()
