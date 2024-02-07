@@ -1,5 +1,6 @@
 import pygame
 import numpy as np
+import matplotlib.pyplot as plt
 
 pygame.init()
 width, height = 1200, 400
@@ -55,12 +56,23 @@ def draw_mandelbrot():
 
 
 def draw_julia(c):
-    for x in range(width // 2, width):
-        for y in range(height):
-            z = xy_to_julia(x, y)
-            color = julia(c, max_iter, z)
-            green = int(255 * color / max_iter)
-            screen.set_at((x, y), (255, green, green))
+    julia_width, julia_height = 600, 400
+    x = np.linspace(-2, 2, julia_width)
+    y = np.linspace(-1, 1, julia_height)
+    X, Y = np.meshgrid(x, y)
+    Z = X + 1j * Y
+    iterations = np.zeros(Z.shape, dtype=int)
+
+    for i in range(max_iter):
+        mask = np.abs(Z) < 2
+        Z[mask] = Z[mask] ** 2 + c
+        iterations[mask] = i
+
+    iterations = iterations / max_iter
+    surface = pygame.surfarray.make_surface(
+        (plt.cm.viridis(iterations)[:, :, :3] * 255).swapaxes(0, 1)
+    )
+    screen.blit(surface, (600, 0))
 
 
 def main():
