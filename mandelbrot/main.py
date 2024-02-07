@@ -30,26 +30,24 @@ def julia(c, max_iter, z):
         z = z * z + c
     return max_iter
 
+
 def xy_to_mandelbrot(x, y):
     return complex(
         3.5 * (x / (width / 2) - 0.5) / zoom + mandelbrot_shift_x,
         2 * (y / height - 0.5) / zoom,
     )
 
+
 def xy_to_julia(x, y):
     return complex(
-        3.5 * ((x - width / 2) / (width / 2) - 0.5) / julia_zoom
-        + julia_shift_x,
+        3.5 * ((x - width / 2) / (width / 2) - 0.5) / julia_zoom + julia_shift_x,
         2 * (y / height - 0.5) / julia_zoom + julia_shift_y,
     )
 
+
 def draw_mandelbrot():
-    for x in range(width // 2):  # Left panel
+    for x in range(width // 2):
         for y in range(height):
-            # c = complex(
-            #     3.5 * (x / (width / 2) - 0.5) / zoom + mandelbrot_shift_x,
-            #     2 * (y / height - 0.5) / zoom,
-            # )
             c = xy_to_mandelbrot(x, y)
             color = mandelbrot(c, max_iter)
             green = int(255 * color / max_iter)
@@ -57,13 +55,8 @@ def draw_mandelbrot():
 
 
 def draw_julia(c):
-    for x in range(width // 2, width):  # Right panel
+    for x in range(width // 2, width):
         for y in range(height):
-            # z = complex(
-            #     3.5 * ((x - width / 2) / (width / 2) - 0.5) / julia_zoom
-            #     + julia_shift_x,
-            #     2 * (y / height - 0.5) / julia_zoom + julia_shift_y,
-            # )
             z = xy_to_julia(x, y)
             color = julia(c, max_iter, z)
             green = int(255 * color / max_iter)
@@ -82,10 +75,7 @@ def main():
         mouse_x, mouse_y = pygame.mouse.get_pos()
         mouse_on_mandelbrot = mouse_x < width // 2
         if mouse_on_mandelbrot:
-            c = complex(
-                3.5 * (mouse_x / (width / 2) - 0.5) / zoom + mandelbrot_shift_x,
-                2 * (mouse_y / height - 0.5) / zoom,
-            )
+            c = xy_to_mandelbrot(mouse_x, mouse_y)
             draw_julia(c)
 
         pygame.display.flip()
