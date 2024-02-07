@@ -3,6 +3,7 @@ from numba import njit, prange, jit
 import pygame
 import numpy as np
 import matplotlib.pyplot as plt
+from colormaps import ColorMaps
 
 pygame.init()
 width, height = 2400, 800
@@ -15,60 +16,6 @@ mandelbrot_shift_x = -0.5
 julia_zoom = 1
 julia_shift_x = 0
 julia_shift_y = 0
-
-
-class ColorMaps:
-    def __init__(self) -> None:
-        self.current_map = 0
-        self.possible_colormaps = [
-            "viridis",
-            "plasma",
-            "inferno",
-            "magma",
-            "cividis",
-            "twilight",
-            "twilight_shifted",
-            "hsv",
-            "Pastel1",
-            "Pastel2",
-            "Paired",
-            "Accent",
-            "Dark2",
-            "Set1",
-            "Set2",
-            "Set3",
-            "tab10",
-            "tab20",
-            "tab20b",
-            "tab20c",
-            "flag",
-            "prism",
-            "ocean",
-            "gist_earth",
-            "terrain",
-            "gist_stern",
-            "gnuplot",
-            "gnuplot2",
-            "CMRmap",
-            "cubehelix",
-            "brg",
-            "gist_rainbow",
-            "rainbow",
-            "jet",
-            "nipy_spectral",
-            "gist_ncar",
-            "viridis_r",
-            "plasma_r",
-        ]
-
-    def get_map(self):
-        return self.possible_colormaps[self.current_map % len(self.possible_colormaps)]
-
-    def next_map(self):
-        self.current_map += 1
-
-    def previous_map(self):
-        self.current_map -= 1
 
 
 def mandelbrot(c, max_iter):
@@ -108,7 +55,7 @@ def draw_mandelbrot():
             c = xy_to_mandelbrot(x, y)
             color = mandelbrot(c, max_iter)
             green = int(255 * color / max_iter)
-            screen.set_at((x, y), (green, green, 255))
+            screen.set_at((x, y), (green, green, green))
 
 
 @njit(parallel=True)
@@ -158,12 +105,13 @@ def main():
                 elif event.key == pygame.K_RIGHT:
                     color_maps.next_map()
 
-
         mouse_x, mouse_y = pygame.mouse.get_pos()
         mouse_on_mandelbrot = mouse_x < width // 2
         if mouse_on_mandelbrot or changed:
             c = xy_to_mandelbrot(mouse_x, mouse_y)
-            julia_surface = get_julia_surface(c, width // 2, height, max_iter, color_maps.get_map())
+            julia_surface = get_julia_surface(
+                c, width // 2, height, max_iter, color_maps.get_map()
+            )
             screen.blit(julia_surface, (width // 2, 0))
         pygame.display.flip()
 
