@@ -50,12 +50,14 @@ def xy_to_julia(x, y):
 
 
 def draw_mandelbrot():
+    surface = pygame.Surface((width // 2, height))
     for x in range(width // 2):
         for y in range(height):
             c = xy_to_mandelbrot(x, y)
             color = mandelbrot(c, max_iter)
-            green = int(255 * color / max_iter)
-            screen.set_at((x, y), (green, green, green))
+            gray_scale = int(255 * color / max_iter)
+            surface.set_at((x, y), (gray_scale, gray_scale, gray_scale))
+    return surface
 
 
 @njit(parallel=True)
@@ -84,9 +86,14 @@ def get_julia_surface(c, width, height, max_iter, color_str):
     return pygame.surfarray.make_surface(julia_image)
 
 
+def get_label_surface(text, font_size, color):
+    font = pygame.font.Font(None, font_size)
+    return font.render(text, True, color)
+
+
 def main():
     running = True
-    draw_mandelbrot()
+    mandelbrot_surface = draw_mandelbrot()
     color_maps = ColorMaps()
     while running:
         changed = False
@@ -113,6 +120,31 @@ def main():
                 c, width // 2, height, max_iter, color_maps.get_map()
             )
             screen.blit(julia_surface, (width // 2, 0))
+
+        screen.blit(mandelbrot_surface, (0, 0))
+        padding = 10
+        font_height = 30
+        iter_text = get_label_surface(
+            f"Max Iterations: {max_iter}", font_height, (255, 255, 255)
+        )
+        color_text = get_label_surface(
+            f"Color: {color_maps.get_map()}", font_height, (255, 255, 255)
+        )
+        max_width = max(iter_text.get_width(), color_text.get_width())
+
+        pygame.draw.rect(
+            screen,
+            (0, 0, 0),
+            (padding, padding, max_width + padding * 2, font_height * 2),
+        )
+        pygame.draw.rect(
+            screen,
+            (255, 255, 255),
+            (padding, padding, max_width + padding * 2, font_height * 2),
+            width=1,
+        )
+        screen.blit(iter_text, (padding * 2, padding * 2))
+        screen.blit(color_text, (padding * 2, font_height + padding))
         pygame.display.flip()
 
     pygame.quit()
