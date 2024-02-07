@@ -1,3 +1,4 @@
+from turtle import color
 from numba import njit, prange, jit
 import pygame
 import numpy as np
@@ -14,6 +15,60 @@ mandelbrot_shift_x = -0.5
 julia_zoom = 1
 julia_shift_x = 0
 julia_shift_y = 0
+
+
+class ColorMaps:
+    def __init__(self) -> None:
+        self.current_map = 0
+        self.possible_colormaps = [
+            "viridis",
+            "plasma",
+            "inferno",
+            "magma",
+            "cividis",
+            "twilight",
+            "twilight_shifted",
+            "hsv",
+            "Pastel1",
+            "Pastel2",
+            "Paired",
+            "Accent",
+            "Dark2",
+            "Set1",
+            "Set2",
+            "Set3",
+            "tab10",
+            "tab20",
+            "tab20b",
+            "tab20c",
+            "flag",
+            "prism",
+            "ocean",
+            "gist_earth",
+            "terrain",
+            "gist_stern",
+            "gnuplot",
+            "gnuplot2",
+            "CMRmap",
+            "cubehelix",
+            "brg",
+            "gist_rainbow",
+            "rainbow",
+            "jet",
+            "nipy_spectral",
+            "gist_ncar",
+            "viridis_r",
+            "plasma_r",
+        ]
+
+    def get_map(self):
+        return self.possible_colormaps[self.current_map % len(self.possible_colormaps)]
+
+    def next_map(self):
+        self.current_map += 1
+
+    def previous_map(self):
+        self.current_map -= 1
 
 
 def mandelbrot(c, max_iter):
@@ -73,10 +128,10 @@ def compute_julia_set(width, height, c, max_iter):
     return result
 
 
-def get_julia_surface(c, width, height, max_iter):
+def get_julia_surface(c, width, height, max_iter, color_str):
     julia_data = compute_julia_set(width, height, c, max_iter)
     normalized_data = julia_data / max_iter
-    colormap = plt.get_cmap("hsv")
+    colormap = plt.get_cmap(color_str)
     colored_data = colormap(normalized_data)
     julia_image = (colored_data[:, :, :3] * 255).astype(np.uint8).swapaxes(0, 1)
     return pygame.surfarray.make_surface(julia_image)
@@ -85,22 +140,30 @@ def get_julia_surface(c, width, height, max_iter):
 def main():
     running = True
     draw_mandelbrot()
+    color_maps = ColorMaps()
     while running:
+        changed = False
         global max_iter
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.KEYDOWN:
+                changed = True
                 if event.key == pygame.K_UP:
                     max_iter += 1
                 elif event.key == pygame.K_DOWN:
                     max_iter -= 1
+                elif event.key == pygame.K_LEFT:
+                    color_maps.previous_map()
+                elif event.key == pygame.K_RIGHT:
+                    color_maps.next_map()
+
 
         mouse_x, mouse_y = pygame.mouse.get_pos()
         mouse_on_mandelbrot = mouse_x < width // 2
-        if mouse_on_mandelbrot:
+        if mouse_on_mandelbrot or changed:
             c = xy_to_mandelbrot(mouse_x, mouse_y)
-            julia_surface = get_julia_surface(c, width // 2, height, max_iter)
+            julia_surface = get_julia_surface(c, width // 2, height, max_iter, color_maps.get_map())
             screen.blit(julia_surface, (width // 2, 0))
         pygame.display.flip()
 
