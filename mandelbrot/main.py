@@ -1,12 +1,20 @@
-from numba import njit, prange # type: ignore
+from numba import njit, prange  # type: ignore
 import pygame
 import numpy as np
 import matplotlib.pyplot as plt
 from colormaps import ColorMaps
+from util import resize_for_aspect_ratio
 
 pygame.init()
-width, height = 2400, 800
-screen = pygame.display.set_mode((width, height))
+
+
+info = pygame.display.Info()
+screen_width, screen_height = info.current_w, info.current_h
+aspect_ratio = 2
+width, height = resize_for_aspect_ratio(screen_width, screen_height, aspect_ratio)
+screen = pygame.display.set_mode((screen_width, screen_height))
+
+
 pygame.display.set_caption("Mandelbrot Set Visualization")
 
 max_iter = 30
@@ -35,16 +43,19 @@ def julia(c: complex, max_iter: int, z: complex) -> int:
 
 
 def xy_to_mandelbrot(x: int, y: int) -> complex:
+    centering_offset = 0.5
     return complex(
-        3.5 * (x / (width / 2) - 0.5) / zoom + mandelbrot_shift_x,
-        2 * (y / height - 0.5) / zoom,
+        3 * (x / (width / 2) - centering_offset) / zoom + mandelbrot_shift_x,
+        3 * (y / height - centering_offset) / zoom,
     )
 
 
 def xy_to_julia(x: int, y: int) -> complex:
+    centering_offset = 0.5
     return complex(
-        3.5 * ((x - width / 2) / (width / 2) - 0.5) / julia_zoom + julia_shift_x,
-        2 * (y / height - 0.5) / julia_zoom + julia_shift_y,
+        3.5 * ((x - width / 2) / (width / 2) - centering_offset) / julia_zoom
+        + julia_shift_x,
+        2 * (y / height - centering_offset) / julia_zoom + julia_shift_y,
     )
 
 
