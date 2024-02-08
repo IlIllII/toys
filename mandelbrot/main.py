@@ -130,9 +130,31 @@ def main():
     running = True
     mandelbrot_surface = draw_mandelbrot()
     color_maps = ColorMaps()
+    prev_mouse_pos = pygame.mouse.get_pos()
+    frame_time = 0
     while running:
         changed = False
+
+        current_fps = 1000 / (pygame.time.get_ticks() - frame_time)
+        target_fps = 10
+        fps_difference = target_fps - current_fps
+        print(f"FPS: {current_fps:.2f}")
+        frame_time = pygame.time.get_ticks()
         global max_iter
+        mouse_move_delta = abs(prev_mouse_pos[0] - pygame.mouse.get_pos()[0]) + abs(
+            prev_mouse_pos[1] - pygame.mouse.get_pos()[1]
+        )
+
+        mouse_sensitivity = 1 if mouse_move_delta < 5 else -2
+        if fps_difference > 0:
+            max_iter -= int(min(2, fps_difference / 5) * mouse_sensitivity)
+        elif fps_difference < 0:
+            max_iter += int(1 * mouse_sensitivity)
+
+        max_iter = max(30, min(max_iter, 200))
+
+        prev_mouse_pos = pygame.mouse.get_pos()
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
