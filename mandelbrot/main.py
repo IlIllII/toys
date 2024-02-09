@@ -126,6 +126,45 @@ def draw_info_panel(screen: pygame.Surface, color_maps: ColorMaps) -> None:
     screen.blit(color_text, (padding * 2, max_height - color_text.get_height()))
 
 
+def adjusted_max_iter(
+    current_fps: float, max_iter: int, prev_mouse_pos: tuple[int, int]
+) -> int:
+    target_fps = 10
+    fps_difference = target_fps - current_fps
+    mouse_move_delta = abs(prev_mouse_pos[0] - pygame.mouse.get_pos()[0]) + abs(
+        prev_mouse_pos[1] - pygame.mouse.get_pos()[1]
+    )
+
+    mouse_sensitivity = 1 if mouse_move_delta < 5 else -2
+    if fps_difference > 0:
+        max_iter -= int(min(2, fps_difference / 5) * mouse_sensitivity)
+    elif fps_difference < 0:
+        max_iter += int(1 * mouse_sensitivity)
+
+    max_iter = max(30, min(max_iter, 200))
+    return max_iter
+
+
+def handle_pygame_events(
+    color_maps: ColorMaps, running: bool, changed: bool
+) -> tuple[bool, bool]:
+    global max_iter
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if event.type == pygame.KEYDOWN:
+            changed = True
+            if event.key == pygame.K_UP:
+                max_iter += 1
+            elif event.key == pygame.K_DOWN:
+                max_iter -= 1
+            elif event.key == pygame.K_LEFT:
+                color_maps.previous_map()
+            elif event.key == pygame.K_RIGHT:
+                color_maps.next_map()
+    return running, changed
+
+
 def main():
     running = True
     mandelbrot_surface = draw_mandelbrot()
@@ -135,39 +174,13 @@ def main():
     while running:
         changed = False
 
-        current_fps = 1000 / (pygame.time.get_ticks() - frame_time)
-        target_fps = 10
-        fps_difference = target_fps - current_fps
-        print(f"FPS: {current_fps:.2f}")
-        frame_time = pygame.time.get_ticks()
         global max_iter
-        mouse_move_delta = abs(prev_mouse_pos[0] - pygame.mouse.get_pos()[0]) + abs(
-            prev_mouse_pos[1] - pygame.mouse.get_pos()[1]
-        )
-
-        mouse_sensitivity = 1 if mouse_move_delta < 5 else -2
-        if fps_difference > 0:
-            max_iter -= int(min(2, fps_difference / 5) * mouse_sensitivity)
-        elif fps_difference < 0:
-            max_iter += int(1 * mouse_sensitivity)
-
-        max_iter = max(30, min(max_iter, 200))
-
+        current_fps = 1000 / (pygame.time.get_ticks() - frame_time)
+        max_iter = adjusted_max_iter(current_fps, max_iter, prev_mouse_pos)
+        frame_time = pygame.time.get_ticks()
         prev_mouse_pos = pygame.mouse.get_pos()
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            if event.type == pygame.KEYDOWN:
-                changed = True
-                if event.key == pygame.K_UP:
-                    max_iter += 1
-                elif event.key == pygame.K_DOWN:
-                    max_iter -= 1
-                elif event.key == pygame.K_LEFT:
-                    color_maps.previous_map()
-                elif event.key == pygame.K_RIGHT:
-                    color_maps.next_map()
+        running, changed = handle_pygame_events(color_maps, running, changed)
 
         mouse_x, mouse_y = pygame.mouse.get_pos()
         mouse_on_mandelbrot = mouse_x < width // 2
